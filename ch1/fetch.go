@@ -16,9 +16,11 @@ func main() {
 		}
 		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "fetch: %v\n", err)
+			fmt.Fprintf(os.Stderr, "fetch: %v\nStatus: %v", err, resp.Status)
 			os.Exit(1)
 		}
+
+		fmt.Printf("Status: %s\n", resp.Status)
 
 		if _, err := io.Copy(os.Stdout, resp.Body); err != nil {
 			fmt.Fprintf(os.Stderr, "fetch: reading %s: %v\n", url, err)
