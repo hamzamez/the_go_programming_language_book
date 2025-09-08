@@ -11,6 +11,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -41,16 +42,21 @@ func main() {
 	rng := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		lissajous(w, rng)
+		cycles := 5 // default number of complete x oscillator revolutions
+		if v, ok := r.Form["cycles"]; ok {
+			// Note: ignoring errors and bad input
+			cycles, _ = strconv.Atoi(v[0])
+		}
+
+		lissajous(w, cycles, rng)
 	})
 
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
 // Update lissajous to accept *rand.Rand
-func lissajous(out io.Writer, rng *rand.Rand) {
+func lissajous(out io.Writer, cycles int, rng *rand.Rand) {
 	const (
-		cycles  = 5     // number of complete x oscillator revolutions
 		res     = 0.001 // angular resolution
 		size    = 100   // image canvas covers [-size..+size]
 		nframes = 64    // number of animation frames
@@ -62,7 +68,7 @@ func lissajous(out io.Writer, rng *rand.Rand) {
 	for i := 0; i < nframes; i++ {
 		rect := image.Rect(0, 0, 2*size+1, 2*size+1)
 		img := image.NewPaletted(rect, palette)
-		for t := 0.0; t < cycles*2*math.Pi; t += res {
+		for t := 0.0; t < float64(cycles)*2*math.Pi; t += res {
 			x := math.Sin(t)
 			y := math.Sin(t*freq + phase)
 			img.SetColorIndex(size+int(x*size+0.5), size+int(y*size+0.5),
